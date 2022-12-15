@@ -1,0 +1,5 @@
+/.vscode
+**/__debug_bin
+/.do-not-commit
+/.cache
+/dist
