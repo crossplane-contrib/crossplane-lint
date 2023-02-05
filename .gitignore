@@ -1,4 +1,5 @@
 /.vscode
+/.idea
 **/__debug_bin
 /.do-not-commit
 /.cache
