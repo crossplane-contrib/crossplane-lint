@@ -134,6 +134,8 @@ func validatePatch(ctx scopedContext, p xpv1.Patch, comp *xpv1.Composition, comp
 		validateSinglePatch(ctx, p, baseGvk, compositeGvk)
 	case "", xpv1.PatchTypeFromCompositeFieldPath:
 		validateSinglePatch(ctx, p, compositeGvk, baseGvk)
+	case xpv1.PatchTypeFromEnvironmentFieldPath:
+		validateEnvironmentPatch(ctx, p, compositeGvk, baseGvk)
 	case xpv1.PatchTypePatchSet:
 		if p.PatchSetName == nil {
 			ctx.ReportIssueRequireField(jsonpath.NewJSONPath("patchSetName"))
@@ -181,6 +183,22 @@ func validateCombinePatch(ctx scopedContext, p xpv1.Patch, fromGvk, toGvk schema
 	}
 }
 
+func validateEnvironmentPatch(ctx scopedContext, p xpv1.Patch, fromGvk, toGvk schema.GroupVersionKind) {
+	if p.FromFieldPath == nil {
+		ctx.ReportIssueRequireField(jsonpath.NewJSONPath("fromFieldPath"))
+	}
+	// TODO: how to validate FromFieldPath?
+	toFieldPath := p.ToFieldPath
+	if toFieldPath == nil {
+		toFieldPath = p.FromFieldPath
+	}
+	if toFieldPath == nil {
+		ctx.ReportIssueRequireField(jsonpath.NewJSONPath("toFieldPath"))
+	} else if err := validateFieldPath(ctx, toGvk, *toFieldPath); err != nil {
+		ctx.ReportIssueFieldPath(jsonpath.NewJSONPath("toFieldPath"), err.Error(), *toFieldPath)
+	}
+}
+
 func validateSinglePatch(ctx scopedContext, p xpv1.Patch, fromGvk, toGvk schema.GroupVersionKind) {
 	if p.FromFieldPath == nil {
 		ctx.ReportIssueRequireField(jsonpath.NewJSONPath("fromFieldPath"))
@@ -212,6 +230,8 @@ func validatePatchSet(ctx scopedContext, ps xpv1.PatchSet, compositeGvk, baseGvk
 			validateSinglePatch(sctx, p, compositeGvk, baseGvk)
 		case xpv1.PatchTypePatchSet:
 			sctx.ReportIssueFieldPath(jsonpath.NewJSONPath("type"), "nested patch sets are not allowed", string(p.Type))
+		case xpv1.PatchTypeFromEnvironmentFieldPath:
+			validateEnvironmentPatch(sctx, p, compositeGvk, baseGvk)
 		default:
 			sctx.ReportIssueFieldPath(jsonpath.NewJSONPath("type"), "unknown patch type", string(p.Type))
 		}
