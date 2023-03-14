@@ -41,11 +41,13 @@ func (s *SchemaStore) RegisterPackage(pkg *xpkg.Package) error {
 				return errors.Wrap(err, errBuildCompositeCRD)
 			}
 			s.registerCRD(comp)
-			claim, err := ForCompositeResourceClaim(xrd)
-			if err != nil {
-				return errors.Wrap(err, errBuildClaimCRD)
+			if xrd.Spec.ClaimNames != nil {
+				claim, err := ForCompositeResourceClaim(xrd)
+				if err != nil {
+					return errors.Wrap(err, errBuildClaimCRD)
+				}
+				s.registerCRD(claim)
 			}
-			s.registerCRD(claim)
 		}
 	}
 	return nil
