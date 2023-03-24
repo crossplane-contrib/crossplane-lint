@@ -90,6 +90,9 @@ func addMetaDataToSchema(crdv *extv1.CustomResourceDefinitionVersion) {
 				},
 			},
 		},
+		"uid": {
+			Type: "string",
+		},
 	}
 	if crdv.Schema == nil {
 		crdv.Schema = &extv1.CustomResourceValidation{}
